@@ -29,7 +29,11 @@ def INDEX(url):
         html = net.http_GET(url).content
         #net.save_cookies(cookie_jar)
         print html
-        r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
+        #r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
+        # Not sure what is going on for the re.findall parts a few lines down, but my re.compile will get
+        # you the link, image and title of the channel from the uk, us, france, germany or italy page :)
+        # LINK, IMG, TITLE
+        r = re.compile('<a href="(.+?)" onclick=".+?"><img alt="((?:(?!TV Guide|veetle)).+?)" title="" width="42" height="25" src="(.+?)" border="0">').findall(html)
         for image, link in r:
                 name = re.findall('(.+?).jp',image)
                 if len(name) == 0:
