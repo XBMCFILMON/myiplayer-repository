@@ -17,6 +17,15 @@ if os.path.exists(cookie_path) == False:
 print 'DATAPATH: '+datapath
 print 'COOKIE JAR: '+cookie_jar
 
+def make_http_get_request(url, track_cookie=False):
+    #if (track_cookie):
+        ## Set to load the cookie from the cookie file
+    try:
+        return net.http_GET(url).content
+    except urllib2.URLError, e:
+        xbmcgui.Dialog().ok(addon.get_name(), 'Unable to connect to website', '', '') 
+        return ""
+
 #xbmc.executebuiltin("Container.SetViewMode(500)")
 def MAIN():
         addDir('UK','http://myiplayer.eu/UKmenu/menu/index.html',10,'%s/resources/art/uk.png'%local.getAddonInfo("path"))
@@ -26,7 +35,7 @@ def MAIN():
         addDir('ITALY','http://myiplayer.eu/Italymenu/menu/index.html',10,'%s/resources/art/italy.png'%local.getAddonInfo("path"))
 
 def INDEX(url):
-        html = net.http_GET(url).content
+        html = make_http_get_request(url)
         #net.save_cookies(cookie_jar)
         print html
         #r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
@@ -124,6 +133,12 @@ except:
 print "Mode: "+str(mode)
 print "URL: "+str(url)
 print "Name: "+str(name)
+
+
+## Mode meanings:
+# None: The main category
+# 1: Show the different channels in a particular language
+# 2: Display a list of links for a particular TV channel
 
 if mode==None or url==None or len(url)<1:
         print ""
