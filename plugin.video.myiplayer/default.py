@@ -18,58 +18,76 @@ print 'DATAPATH: '+datapath
 print 'COOKIE JAR: '+cookie_jar
 
 def make_http_get_request(url, track_cookie=False):
-    #if (track_cookie):
-        ## Set to load the cookie from the cookie file
+    if (track_cookie):
+        net.set_cookies(cookie_jar)
     try:
-        return net.http_GET(url).content
+        html = net.http_GET(url).content
+        if (track_cookie):
+            net.save_cookies(cookie_jar)
+        return html
     except urllib2.URLError, e:
         xbmcgui.Dialog().ok(addon.get_name(), 'Unable to connect to website', '', '') 
         return ""
 
 #xbmc.executebuiltin("Container.SetViewMode(500)")
 def MAIN():
-        addDir('UK','http://myiplayer.eu/UKmenu/menu/index.html',10,'%s/resources/art/uk.png'%local.getAddonInfo("path"))
-        addDir('US','http://myiplayer.eu/USmenu/menu/index.html',10,'%s/resources/art/usa.png'%local.getAddonInfo("path"))
-        addDir('FRANCE','http://myiplayer.eu/Francemenu/menu/index.html',10,'%s/resources/art/france.png'%local.getAddonInfo("path"))
-        addDir('GERMANY','http://myiplayer.eu/Germanymenu/menu/index.html',10,'%s/resources/art/germany.png'%local.getAddonInfo("path"))
-        addDir('ITALY','http://myiplayer.eu/Italymenu/menu/index.html',10,'%s/resources/art/italy.png'%local.getAddonInfo("path"))
+    addDir('UK','http://myiplayer.eu/UKmenu/menu/index.html',10,'%s/resources/art/uk.png'%local.getAddonInfo("path"))
+    addDir('US','http://myiplayer.eu/USmenu/menu/index.html',10,'%s/resources/art/usa.png'%local.getAddonInfo("path"))
+    addDir('FRANCE','http://myiplayer.eu/Francemenu/menu/index.html',10,'%s/resources/art/france.png'%local.getAddonInfo("path"))
+    addDir('GERMANY','http://myiplayer.eu/Germanymenu/menu/index.html',10,'%s/resources/art/germany.png'%local.getAddonInfo("path"))
+    addDir('ITALY','http://myiplayer.eu/Italymenu/menu/index.html',10,'%s/resources/art/italy.png'%local.getAddonInfo("path"))
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def INDEX(url):
-        html = make_http_get_request(url)
-        #net.save_cookies(cookie_jar)
-        print html
-        #r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
-        # Not sure what is going on for the re.findall parts a few lines down, but my re.compile will get
-        # you the link, image and title of the channel from the uk, us, france, germany or italy page :)
-        # LINK, IMG, TITLE
-        r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
-        for image, link in r:
-                name = re.findall('(.+?).jp',image)
-                if len(name) == 0:
-                        name = re.findall(r'(.+?).pn',image)
-                name = ''.join(name)
-                print 'Name is: '+str(name)
-                print 'IMAGE IS: '+str(image)
-                print 'LINK IS: '+link
-                if 'UK/' in link:
-                    IMAGE_URL = 'http://myiplayer.eu/UKmenu/menu/'
-                if 'USA/' in link:
-                    IMAGE_URL = 'http://myiplayer.eu/USmenu/menu/'
-                if 'France/' in link:
-                    IMAGE_URL = 'http://myiplayer.eu/Francemenu/menu/'
-                if 'Germany/' in link:
-                    IMAGE_URL = 'http://myiplayer.eu/Germanymenu/menu/'
-                if 'Italy/' in link:
-                    IMAGE_URL = 'http://myiplayer.eu/Italymenu/menu/'
-                
-                addDir(name,BASE_URL+link,20,IMAGE_URL+image)
-        #xbmc.executebuiltin("Container.SetViewMode(501)")
+    html = make_http_get_request(url)
+    #net.save_cookies(cookie_jar)
+    print html
+    #r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
+    # Not sure what is going on for the re.findall parts a few lines down, but my re.compile will get
+    # you the link, image and title of the channel from the uk, us, france, germany or italy page :)
+    # LINK, IMG, TITLE
+    r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
+    for image, link in r:
+            name = re.findall('(.+?).jp',image)
+            if len(name) == 0:
+                name = re.findall(r'(.+?).pn',image)
+            name = ''.join(name)
+            print 'Name is: '+str(name)
+            print 'IMAGE IS: '+str(image)
+            print 'LINK IS: '+link
+            if 'UK/' in link:
+                IMAGE_URL = 'http://myiplayer.eu/UKmenu/menu/'
+            if 'USA/' in link:
+                IMAGE_URL = 'http://myiplayer.eu/USmenu/menu/'
+            if 'France/' in link:
+                IMAGE_URL = 'http://myiplayer.eu/Francemenu/menu/'
+            if 'Germany/' in link:
+                IMAGE_URL = 'http://myiplayer.eu/Germanymenu/menu/'
+            if 'Italy/' in link:
+                IMAGE_URL = 'http://myiplayer.eu/Italymenu/menu/'
+        
+            addDir(name,BASE_URL+link,20,IMAGE_URL+image)
+    #xbmc.executebuiltin("Container.SetViewMode(501)")
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
         
 
+def VIDEOLINKS(url, name):
+    ## Experimental stuff, feel free to change this functon altogether
+    print url
 
+    html = make_http_get_request(url)
 
+    matches = re.compile('<div id="apDiv10"><iframe src="(.+?)".+?></iframe>').findall(html)
 
+    for match in matches:
+        html = make_http_get_request(match)
 
+        streams = re.compile('<a href="(.+?)" target="_self">').findall(html)
+
+        for stream in streams:
+            print stream
+    
+    xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
 def get_params():
@@ -137,26 +155,16 @@ print "Name: "+str(name)
 
 ## Mode meanings:
 # None: The main category
-# 1: Show the different channels in a particular language
-# 2: Display a list of links for a particular TV channel
+# 10: Show the different channels in a particular language
+# 20: Display a list of links for a particular TV channel
 
 if mode==None or url==None or len(url)<1:
-        print ""
-        MAIN()
+    MAIN()
        
-elif mode==1:
-        print ""+url
-        INDEX(url)
-
 elif mode==10:
-        INDEX(url)
+    INDEX(url)
         
-        
-elif mode==2:
-        print ""+url
-        VIDEOLINKS(url,name)
+elif mode==20:
+    VIDEOLINKS(url,name)
 
-
-
-xbmcplugin.endOfDirectory(int(sys.argv[1]))
 #xbmc.executebuiltin("Container.SetViewMode(50)")
