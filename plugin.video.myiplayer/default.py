@@ -29,6 +29,15 @@ def make_http_get_request(url, track_cookie=False):
         xbmcgui.Dialog().ok(addon.get_name(), 'Unable to connect to website', '', '') 
         return ""
 
+# Taken from desitvforum xbmc plugin.
+def get_domain_name(url):
+    tmp = re.compile('//(.+?)/').findall(url)
+    domain = 'Unknown'
+    if len(tmp) > 0:
+        domain = tmp[0].replace('www.', '')
+    return domain
+
+
 #xbmc.executebuiltin("Container.SetViewMode(500)")
 def MAIN():
     addDir('UK','http://myiplayer.eu/UKmenu/menu/index.html',10,'%s/resources/art/uk.png'%local.getAddonInfo("path"))
@@ -70,25 +79,67 @@ def INDEX(url):
     #xbmc.executebuiltin("Container.SetViewMode(501)")
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
         
-
+##
+# When given a channel url, it adds links to watch that channel
+## 
 def VIDEOLINKS(url, name):
-    ## Experimental stuff, feel free to change this functon altogether
-    print url
-
     html = make_http_get_request(url)
 
-    matches = re.compile('<div id="apDiv10"><iframe src="(.+?)".+?></iframe>').findall(html)
+    matches = re.compile('<iframe src="(http://www.myiplayer.eu.+?)".+?></iframe>').findall(html)
 
-    for match in matches:
-        html = make_http_get_request(match)
+    if (len(matches) > 0):
+        first_link = matches[0]
 
-        streams = re.compile('<a href="(.+?)" target="_self">').findall(html)
+        print "The first stream is: " + first_link
 
-        for stream in streams:
-            print stream
-    
-    xbmcplugin.endOfDirectory(int(sys.argv[1]))
+        first_link_html = make_http_get_request(first_link)
 
+        add_stream_url(first_link_html)
+
+        add_alternate_links(first_link, first_link_html)
+
+        xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+##
+# When given the url to the first source and the html representation of that page, it
+# does the following:
+# 
+# * Look at if the current channel have other sources
+# * If they have other sources, it calls add_stream_url to add them
+##
+def add_alternate_links(url, first_link_html):
+    streams = re.compile('<a href="(.+?)" target="_self">').findall(first_link_html) 
+
+    if (len (streams) < 2):
+        return
+
+    for stream in streams[1:]:
+        stream_url =  url + "/../" + stream
+
+        stream_html = make_http_get_request(stream_url)
+
+        add_stream_url(stream_html)
+
+##
+# This method takes in the html of a source and it finds, resolves and adds the playable link
+# to it.
+##
+def add_stream_url(html):
+    source_matches = re.compile('src="(.+?)"').findall(html)
+
+    for source in source_matches:
+        source_domain = get_domain_name(source)
+
+        if (source_domain == "futuboxhd.com"):
+
+            rtmpProp = re.compile('(.+?)\?.+?streamer=(.+?)(&amp)?;file=(.+?)$').findall(source)
+
+            for swfUrl, tcUrl, _, playPath in rtmpProp:
+                rtmpUrl = tcUrl + playPath + " swfUrl=" + swfUrl + " pageUrl="+ swfUrl
+
+                addLink(source_domain,  rtmpUrl, "")
+        elif (source_domain != "Unknown"):
+            print "%s not resolved yet!" % source_domain
 
 def get_params():
         param=[]
