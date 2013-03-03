@@ -93,11 +93,9 @@ def VIDEOLINKS(url, name):
         print "The first stream is: " + first_link
 
         first_link_html = make_http_get_request(first_link)
-
+        
         add_stream_url(first_link_html)
-
         add_alternate_links(first_link, first_link_html)
-
         xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 ##
@@ -126,17 +124,15 @@ def add_alternate_links(url, first_link_html):
 ##
 def add_stream_url(html):
     source_matches = re.compile('src="(.+?)"').findall(html)
-
     for source in source_matches:
         source_domain = get_domain_name(source)
 
         if (source_domain == "futuboxhd.com"):
 
             rtmpProp = re.compile('(.+?)\?.+?streamer=(.+?)(&amp)?;file=(.+?)$').findall(source)
-
             for swfUrl, tcUrl, _, playPath in rtmpProp:
                 rtmpUrl = tcUrl + playPath + " swfUrl=" + swfUrl + " pageUrl="+ swfUrl
-
+                print rtmpUrl
                 addLink(source_domain,  rtmpUrl, "")
         elif (source_domain != "Unknown"):
             print "%s not resolved yet!" % source_domain
