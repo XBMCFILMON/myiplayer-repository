@@ -18,6 +18,7 @@ print 'DATAPATH: '+datapath
 print 'COOKIE JAR: '+cookie_jar
 
 def make_http_get_request(url, track_cookie=False):
+    print "Getting Http Request for "+url
     if (track_cookie):
         net.set_cookies(cookie_jar)
     try:
@@ -89,6 +90,14 @@ def VIDEOLINKS(url, name):
     matches2 = re.compile('<iframe src="(http://www.watchtelevision.eu.+?)".+?><br />\n      </iframe>').findall(html)#sports domain is different uses watchtelevision.eu
     if (len(matches) > 0):
         first_link = matches[0]
+
+        print "The first stream is: " + first_link
+
+        first_link_html = make_http_get_request(first_link)
+        
+        add_stream_url(first_link_html)
+        add_alternate_links(first_link, first_link_html)
+        xbmcplugin.endOfDirectory(int(sys.argv[1]))
     elif (len(matches2) > 0):
         first_link = matches2[0]
 
@@ -146,6 +155,20 @@ def add_stream_url(html):
             for playPath in playpath:
                 rtmpUrl = 'rtmp://142.4.216.176/edge playpath=' + playPath + " swfUrl=http://static.ilive.to/jwplayer/player_embed.swf pageUrl="+pageUrl+"live=1"
                 addLink(source_domain,  rtmpUrl, "")
+        elif (source_domain == "veemi.com"):
+            fid = re.compile('fid="(.+?)";').findall(html)
+            stream_url = 'http://live.veemi.com:1935/live/_definst_/'+fid[0]+'/playlist.m3u8'
+            addLink(source_domain,  stream_url, "")
+        elif (source_domain == "castalba.tv"):
+            fid = re.compile('> id="(.+?)";').findall(html)
+            pageUrl = 'http://castalba.tv/embed.php?cid='+fid[0]+'&wh=640&ht=385&r=lsh.lshunter.tv'
+            html = make_http_get_request(pageUrl)
+            swfUrl=re.compile('flashplayer\': "(.+?)"').findall(html)
+            playPath=re.compile("'file\': \'(.+?)\',\r\n\r\n\t\t\t\'streamer\'").findall(html)
+            rtmp=re.compile("'streamer\': \'(.+?)\',").findall(html)
+            rtmpUrl= rtmp[0] + ' playpath=' + playPath[0] + ' swfUrl=' + swfUrl[0] + ' live=true timeout=15 swfVfy=true pageUrl=' + pageUrl
+            addLink(source_domain,  rtmpUrl, "")
+
         elif (source_domain != "Unknown"):
             print "%s not resolved yet!" % source_domain
 
