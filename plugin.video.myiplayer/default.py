@@ -50,7 +50,6 @@ def MAIN():
 def INDEX(url):
     html = make_http_get_request(url)
     #net.save_cookies(cookie_jar)
-    print html
     #r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
     # Not sure what is going on for the re.findall parts a few lines down, but my re.compile will get
     # you the link, image and title of the channel from the uk, us, france, germany or italy page :)
@@ -61,9 +60,6 @@ def INDEX(url):
             if len(name) == 0:
                 name = re.findall(r'(.+?).pn',image)
             name = ''.join(name)
-            print 'Name is: '+str(name)
-            print 'IMAGE IS: '+str(image)
-            print 'LINK IS: '+link
             if 'UK/' in link:
                 IMAGE_URL = 'http://myiplayer.eu/UKmenu/menu/'
             if 'USA/' in link:
@@ -125,6 +121,7 @@ def add_alternate_links(url, first_link_html):
 def add_stream_url(html):
     source_matches = re.compile('src="(.+?)"').findall(html)
     for source in source_matches:
+        print "source="+source
         source_domain = get_domain_name(source)
 
         if (source_domain == "futuboxhd.com"):
@@ -132,7 +129,16 @@ def add_stream_url(html):
             rtmpProp = re.compile('(.+?)\?.+?streamer=(.+?)(&amp)?;file=(.+?)$').findall(source)
             for swfUrl, tcUrl, _, playPath in rtmpProp:
                 rtmpUrl = tcUrl + playPath + " swfUrl=" + swfUrl + " pageUrl="+ swfUrl
-                print rtmpUrl
+                addLink(source_domain,  rtmpUrl, "")
+        elif (source_domain == "ilive.to"):
+            html = make_http_get_request(source)
+            pageurl = re.compile("<iframe src='(.+?)'").findall(html)
+            for pageUrl in pageurl:
+                continue
+            html = make_http_get_request(pageUrl)
+            playpath=re.compile("file\': \'(.+?).flv").findall(html)
+            for playPath in playpath:
+                rtmpUrl = 'rtmp://142.4.216.176/edge playpath=' + playPath + " swfUrl=http://static.ilive.to/jwplayer/player_embed.swf pageUrl="+pageUrl+"live=1"
                 addLink(source_domain,  rtmpUrl, "")
         elif (source_domain != "Unknown"):
             print "%s not resolved yet!" % source_domain
