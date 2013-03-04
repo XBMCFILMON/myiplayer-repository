@@ -45,6 +45,7 @@ def MAIN():
     addDir('FRANCE','http://myiplayer.eu/Francemenu/menu/index.html',10,'%s/resources/art/france.png'%local.getAddonInfo("path"))
     addDir('GERMANY','http://myiplayer.eu/Germanymenu/menu/index.html',10,'%s/resources/art/germany.png'%local.getAddonInfo("path"))
     addDir('ITALY','http://myiplayer.eu/Italymenu/menu/index.html',10,'%s/resources/art/italy.png'%local.getAddonInfo("path"))
+    addDir('SPORTS','http://myiplayer.eu/Sportsmenu/menu/index.html',10,'%s/resources/art/rr.png'%local.getAddonInfo("path"))
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 def INDEX(url):
@@ -56,6 +57,7 @@ def INDEX(url):
     # LINK, IMG, TITLE
     r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
     for image, link in r:
+            print link
             name = re.findall('(.+?).jp',image)
             if len(name) == 0:
                 name = re.findall(r'(.+?).pn',image)
@@ -70,6 +72,8 @@ def INDEX(url):
                 IMAGE_URL = 'http://myiplayer.eu/Germanymenu/menu/'
             if 'Italy/' in link:
                 IMAGE_URL = 'http://myiplayer.eu/Italymenu/menu/'
+            if 'sportstoday.php' in link:
+                IMAGE_URL = 'http://myiplayer.eu/Sportsmenu/menu/'
         
             addDir(name,BASE_URL+link,20,IMAGE_URL+image)
     #xbmc.executebuiltin("Container.SetViewMode(501)")
@@ -82,9 +86,11 @@ def VIDEOLINKS(url, name):
     html = make_http_get_request(url)
 
     matches = re.compile('<iframe src="(http://www.myiplayer.eu.+?)".+?></iframe>').findall(html)
-
+    matches2 = re.compile('<iframe src="(http://www.watchtelevision.eu.+?)".+?><br />\n      </iframe>').findall(html)#sports domain is different uses watchtelevision.eu
     if (len(matches) > 0):
         first_link = matches[0]
+    elif (len(matches2) > 0):
+        first_link = matches2[0]
 
         print "The first stream is: " + first_link
 
