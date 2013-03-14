@@ -59,9 +59,9 @@ def INDEX(url):
     r = re.compile(r'div data-image="(.+?)" data-link="../../(.+?)"></div>',re.I).findall(html)
     for image, link in r:
             print link
-            name = re.findall('(.+?).jp',image)
+            name = re.findall('(.+?).jp',image,re.IGNORECASE)
             if len(name) == 0:
-                name = re.findall(r'(.+?).pn',image)
+                name = re.findall(r'(.+?).pn',image,re.IGNORECASE)
             name = ''.join(name)
             if 'UK/' in link:
                 IMAGE_URL = 'http://myiplayer.eu/UKmenu/menu/'
@@ -76,7 +76,7 @@ def INDEX(url):
             if 'sportstoday.php' in link:
                 IMAGE_URL = 'http://myiplayer.eu/Sportsmenu/menu/'
         
-            addDir(name,BASE_URL+link,20,IMAGE_URL+image)
+            addDir(name.upper(),BASE_URL+link,20,IMAGE_URL+image)
     #xbmc.executebuiltin("Container.SetViewMode(501)")
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
         
@@ -167,6 +167,14 @@ def add_stream_url(html):
             playPath=re.compile("'file\': \'(.+?)\',\r\n\r\n\t\t\t\'streamer\'").findall(html)
             rtmp=re.compile("'streamer\': \'(.+?)\',").findall(html)
             rtmpUrl= rtmp[0] + ' playpath=' + playPath[0] + ' swfUrl=' + swfUrl[0] + ' live=true timeout=15 swfVfy=true pageUrl=' + pageUrl
+            addLink(source_domain,  rtmpUrl, "")
+        elif (source_domain == "yycast.com"):
+            fid = re.compile('fid="(.+?)";').findall(html)
+            pageUrl = 'http://www.yycast.com/'+fid[0]
+            html = make_http_get_request(pageUrl)
+            swfUrl=re.compile("'plugins': '(.+?)'").findall(html)
+            playPath=re.compile("'file': '(.+?)'").findall(html)
+            rtmpUrl= 'rtmp://85.12.5.44:1935/live/_definst_/'+playPath[0] + ' playpath=' + playPath[0] + ' swfUrl=http://cdn.yycast.com/player' + swfUrl[0] + 'app=live/_definst tcUrl=rtmp://85.12.5.44:1935/live/_definst_ live=true timeout=15 swfVfy=true pageUrl=' + pageUrl
             addLink(source_domain,  rtmpUrl, "")
 
         elif (source_domain != "Unknown"):
